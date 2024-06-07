@@ -62,6 +62,9 @@
     "stress:destroy": "docker-compose -f scripts/stress-test/docker-compose.yml stop"
   },
   "dependencies": {
+    "assert": "^2.1.0",
+    "bluebird": "^3.7.2",
+    "clickhouse": "^2.6.0",
     "colorette": "2.0.19",
     "commander": "^10.0.0",
     "debug": "4.3.4",
@@ -69,11 +72,14 @@
     "esm": "^3.2.25",
     "get-package-type": "^0.1.0",
     "getopts": "2.3.0",
+    "inherits": "^2.0.4",
     "interpret": "^2.2.0",
+    "loadash": "^1.0.0",
     "lodash": "^4.17.21",
     "pg-connection-string": "2.6.2",
     "rechoir": "^0.8.0",
     "resolve-from": "^5.0.0",
+    "sqlstring": "^2.3.3",
     "tarn": "^3.0.2",
     "tildify": "2.0.0"
   },

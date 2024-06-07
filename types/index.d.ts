@@ -610,6 +610,7 @@ declare namespace Knex {
     distinctOn: DistinctOn<TRecord, TResult>;
 
     // Joins
+    arrayJoin: ArrayJoin<TRecord, TResult>;
     join: Join<TRecord, TResult>;
     joinRaw: JoinRaw<TRecord, TResult>;
     innerJoin: Join<TRecord, TResult>;
@@ -700,6 +701,7 @@ declare namespace Knex {
     whereJsonNotSubsetOf: WhereJsonObject<TRecord, TResult>;
     orWhereJsonNotSubsetOf: WhereJsonObject<TRecord, TResult>;
     andWhereJsonNotSubsetOf: WhereJsonObject<TRecord, TResult>;
+    preWhere: Where<TRecord, TResult>;
 
     // Group by
     groupBy: GroupBy<TRecord, TResult>;
@@ -1628,6 +1630,10 @@ declare namespace Knex {
     type(type: string): JoinClause;
   }
 
+  interface ArrayJoin<TRecord extends {} = any, TResult = unknown[]> {
+    (tableName: string, binding?: Value | Value[] | ValueDict): QueryBuilder<TRecord, TResult>;
+  }
+
   interface JoinRaw<TRecord extends {} = any, TResult = unknown[]> {
     (tableName: string, binding?: Value | Value[] | ValueDict): QueryBuilder<
       TRecord,
@@ -1831,6 +1837,66 @@ declare namespace Knex {
     ): QueryBuilder<TRecord, TResult>;
   }
 
+  interface preWhere<TRecord = any, TResult = unknown>
+  extends WhereRaw<TRecord, TResult>,
+    WhereWrapped<TRecord, TResult>,
+    WhereNull<TRecord, TResult> {
+  (raw: Raw): QueryBuilder<TRecord, TResult>;
+
+  (callback: QueryCallback<TRecord, TResult>): QueryBuilder<TRecord, TResult>;
+
+  (object: DbRecord<ResolveTableType<TRecord>>): QueryBuilder<
+    TRecord,
+    TResult
+  >;
+
+  (object: Readonly<Object>): QueryBuilder<TRecord, TResult>;
+
+  <T extends keyof ResolveTableType<TRecord>>(
+    columnName: T,
+    value: DbColumn<ResolveTableType<TRecord>[T]> | null
+  ): QueryBuilder<TRecord, TResult>;
+
+  (columnName: string, value: Value | null): QueryBuilder<TRecord, TResult>;
+
+  <T extends keyof ResolveTableType<TRecord>>(
+    columnName: T,
+    operator: ComparisonOperator,
+    value: DbColumn<ResolveTableType<TRecord>[T]> | null
+  ): QueryBuilder<TRecord, TResult>;
+
+  (columnName: string, operator: string, value: Value | null): QueryBuilder<
+    TRecord,
+    TResult
+  >;
+
+  <
+    T extends keyof ResolveTableType<TRecord>,
+    TRecordInner extends {},
+    TResultInner
+  >(
+    columnName: T,
+    operator: ComparisonOperator,
+    value: QueryBuilder<TRecordInner, TResultInner>
+  ): QueryBuilder<TRecord, TResult>;
+
+  <TRecordInner extends {}, TResultInner>(
+    columnName: string,
+    operator: string,
+    value: QueryBuilder<TRecordInner, TResultInner>
+  ): QueryBuilder<TRecord, TResult>;
+
+  (left: Raw, operator: string, right: Value | null): QueryBuilder<
+    TRecord,
+    TResult
+  >;
+
+  <TRecordInner extends {}, TResultInner>(
+    left: Raw,
+    operator: string,
+    right: QueryBuilder<TRecordInner, TResultInner>
+  ): QueryBuilder<TRecord, TResult>;
+}
   // Note: Attempting to unify AsymmetricAggregation & TypePreservingAggregation
   // by extracting out a common base interface will not work because order of overloads
   // is significant.
@@ -3151,31 +3217,15 @@ declare namespace Knex {
     name?: string;
   }
 
-  // Note that the shape of the `migration` depends on the MigrationSource which may be custom.
-  type LifecycleHook = (
-    knexOrTrx: Knex | Transaction,
-    migrations: unknown[]
-  ) => Promise<any>;
-
-  interface MigratorConfigWithLifecycleHooks extends MigratorConfig {
-    beforeAll?: LifecycleHook;
-    beforeEach?: LifecycleHook;
-    afterEach?: LifecycleHook;
-    afterAll?: LifecycleHook;
-  }
-
   interface Migrator {
     make(name: string, config?: MigratorConfig): Promise<string>;
-    latest(config?: MigratorConfigWithLifecycleHooks): Promise<any>;
-    rollback(
-      config?: MigratorConfigWithLifecycleHooks,
-      all?: boolean
-    ): Promise<any>;
+    latest(config?: MigratorConfig): Promise<any>;
+    rollback(config?: MigratorConfig, all?: boolean): Promise<any>;
     status(config?: MigratorConfig): Promise<number>;
     currentVersion(config?: MigratorConfig): Promise<string>;
     list(config?: MigratorConfig): Promise<any>;
-    up(config?: MigratorConfigWithLifecycleHooks): Promise<any>;
-    down(config?: MigratorConfigWithLifecycleHooks): Promise<any>;
+    up(config?: MigratorConfig): Promise<any>;
+    down(config?: MigratorConfig): Promise<any>;
     forceFreeMigrationsLock(config?: MigratorConfig): Promise<any>;
   }
 
